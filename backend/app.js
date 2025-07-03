@@ -1,15 +1,12 @@
 require("dotenv").config();
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const session = require("express-session");
 const passport = require("passport");
-
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const { setupSocket } = require("./services/socketService");
-
 const app = express();
 
 // ✅ Trust Railway’s proxy (for secure cookies, Google OAuth)
