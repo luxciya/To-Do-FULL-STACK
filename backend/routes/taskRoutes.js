@@ -7,7 +7,6 @@ const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) return next();
   res.status(401).json({ message: "Not logged in" });
 };
-
 // Get all tasks for logged-in user
 router.get("/", isLoggedIn, async (req, res) => {
   const tasks = await Task.find({ createdBy: req.user._id });
@@ -24,7 +23,6 @@ router.post("/", isLoggedIn, async (req, res) => {
   });
   res.json(task);
 });
-
 // Update task (only if belongs to user)
 router.put("/:id", isLoggedIn, async (req, res) => {
   const task = await Task.findOneAndUpdate(
@@ -34,7 +32,6 @@ router.put("/:id", isLoggedIn, async (req, res) => {
   );
   res.json(task);
 });
-
 // Delete task (only if belongs to user)
 router.delete("/:id", isLoggedIn, async (req, res) => {
   await Task.findOneAndDelete({ _id: req.params.id, createdBy: req.user._id });
