@@ -11,38 +11,64 @@ const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const { setupSocket } = require("./services/socketService");
 
-// OPTIONAL: Separate Passport config if stored in /config/passport.js
-// require("./config/passport");
-
 const app = express();
 
-// Middleware setup
+// ✅ Trust Railway’s proxy (for secure cookies, Google OAuth)
+app.set("trust proxy", 1); // Required for Railway HTTPS
+
+// ✅ Middleware to parse JSON
 app.use(express.json());
+
+// ✅ CORS setup (allow frontend from Vercel)
 app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
+  origin: "https://to-do-full-stack-zeta.vercel.app", // your Vercel frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true, // allow cookies to be sent
 }));
 
-// Session middleware (required for Passport with OAuth2)
+// ✅ Session setup
 app.use(session({
-  secret: "your-session-secret",
+  secret: process.env.SESSION_SECRET || "my-session-secret",
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    secure: true,            // ensures cookies only sent over HTTPS
+    sameSite: "none",        // required for cross-origin (Vercel + Railway)
+    maxAge: 24 * 60 * 60 * 1000 // 1 day
+  }
 }));
 
-// Passport middleware
+// ✅ Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
+// ✅ Log every incoming request (for debugging)
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.url}`);
+  next();
+});
+
+// ✅ Root test route
+app.get("/", (req, res) => {
+  res.send("✅ Todo Task API is running. Use /api endpoints.");
+});
+
+// ✅ API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+// ✅ Health check route
+app.get("/ping", (req, res) => {
+  res.send("✅ Backend is live!");
+});
+
+// ✅ MongoDB Connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB connected");
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+  });
 
 module.exports = app;
